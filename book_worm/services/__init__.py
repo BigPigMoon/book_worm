@@ -1,2 +1,2 @@
-from .category import *
 from .user import *
+from .category import *

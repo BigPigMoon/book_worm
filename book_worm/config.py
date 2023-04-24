@@ -1,0 +1,1 @@
+CATEGORIES_PATTERN = "category_"
