@@ -6,7 +6,7 @@ from models.user import User
 logger = logging.getLogger()
 
 
-def registration(uid: int):
+def registration(uid: str):
     """Registrate new user."""
     if not uid:
         logger.warning("User id does not exist")
