@@ -1,14 +1,15 @@
 [tool.poetry]
 name = "book-worm"
 version = "0.1.0"
-description = ""
-authors = ["Your Name <you@example.com>"]
+description = "Telegram-bot for managment books"
+authors = ["BigPigMoon matvey.novikov02@gmail.com"]
 readme = "README.md"
 packages = [{include = "book_worm"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 python-telegram-bot = "^20.2"
+python-dotenv = "^1.0.0"
 
 
 [build-system]
