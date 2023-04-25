@@ -2,7 +2,7 @@
 name = "book-worm"
 version = "0.1.0"
 description = "Telegram-bot for managment books"
-authors = ["BigPigMoon matvey.novikov02@gmail.com"]
+authors = ["BigPigMoon <matvey.novikov02@gmail.com>"]
 readme = "README.md"
 packages = [{include = "book_worm"}]
 

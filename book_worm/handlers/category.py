@@ -1,4 +1,3 @@
-import telegram
 from telegram import Update
 from telegram.ext import ContextTypes
 
@@ -7,30 +6,16 @@ import config
 import models
 
 from .response import send_response
-from .keyboard import get_category_keyboard
+from .keyboard import get_category_keyboard, get_delete_category_keyboard, get_index_of_button
 
 
 async def add_category_process(
     update: Update,
-    context: ContextTypes.DEFAULT_TYPE
+    context: ContextTypes.DEFAULT_TYPE,
+    user: models.User,
+    user_message: str,
 ):
-    """Message handler for add new category"""
-
-    uid = update.message.from_user['id']
-    user = services.user.get_current_user(uid)
-
-    if not user or not user.is_add_category:
-        await send_response(
-            update, context,
-            "Ты, по-моему, перепутал\nПосмотри справку /help"
-        )
-        return
-
-    user_message = update.message.text
-
     models.Category.create(title=user_message, user=user)
-    user.is_add_category = False
-    user.save()
 
     response = services.all_categories(user)
 
@@ -54,6 +39,11 @@ async def category_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def category_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Category button handler.
+
+    Handel button pressed
+    """
+
     query = update.callback_query
 
     await query.answer()
@@ -61,21 +51,55 @@ async def category_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not query.data or not query.data.strip():
         return
 
-    uid = update.callback_query.from_user.id
+    current_category_index_command = get_index_of_button(
+        query.data, config.CATEGORIES_PATTERN
+    )
 
+    uid = update.callback_query.from_user.id
     user = services.user.get_current_user(uid)
 
-    current_category_index_command = _get_current_category_index(query.data)
+    match current_category_index_command:
+        case 1 if user:
+            await send_response(
+                update, context,
+                "Укажите имя для новой категории",
+            )
+            user.is_add_category = True
+            user.is_add_book = False
+            user.save()
+        case 2 if user:
+            await send_response(
+                update, context,
+                "Какую категорию желаете удалить?",
+                get_delete_category_keyboard(
+                    config.DELETE_CATEGORY_PATTERN, user
+                )
+            )
 
-    if current_category_index_command == 1 and user:
-        await send_response(
-            update, context,
-            "Укажите имя для новой категории",
-        )
-        user.is_add_category = True
-        user.save()
 
+async def delete_category_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Delete category button handler.
 
-def _get_current_category_index(query_data) -> int:
-    pattern_prefix_length = len(config.CATEGORIES_PATTERN)
-    return int(query_data[pattern_prefix_length:])
+    Handel button pressed
+    """
+
+    query = update.callback_query
+
+    await query.answer()
+
+    if not query.data or not query.data.strip():
+        return
+
+    category_index = get_index_of_button(
+        query.data, config.DELETE_CATEGORY_PATTERN
+    )
+    models.Category.delete_by_id(category_index)
+
+    uid = update.callback_query.from_user.id
+    user = services.user.get_current_user(uid)
+    text = services.all_categories(user)
+
+    await send_response(
+        update, context, text,
+        get_category_keyboard(config.CATEGORIES_PATTERN),
+    )

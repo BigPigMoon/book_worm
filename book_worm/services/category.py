@@ -1,9 +1,4 @@
-import logging
-
 from models import User, Category
-
-
-logger = logging.getLogger()
 
 
 def all_categories(user: User) -> str:
@@ -12,7 +7,7 @@ def all_categories(user: User) -> str:
     categories = Category.select().where(Category.user == user)
 
     if len(categories) == 0:
-        return ''
+        return 'Ты не добавил ни одну категорию! Добавь быстро!'
 
     res = 'Ваши категории:\n'
 
