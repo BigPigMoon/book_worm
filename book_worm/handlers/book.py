@@ -18,7 +18,11 @@ async def add_book_process(
 ):
     """Message handler for add new book"""
 
-    await send_response(update, context, "Я добавил книжку")
+    category = models.Category.get_by_id(user.selected_category)
+
+    # print(category.title)
+
+    await book_command(update, context)
 
 
 async def book_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -29,7 +33,12 @@ async def book_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         models.category.Category.user == user))
 
     if len(categories) > 0:
-        text = services.get_books_by_category(user, categories[0].id)
+        print(user.selected_category)
+        if user.selected_category is None:
+            user.selected_category = categories[0]
+            user.save()
+
+        text = services.get_books_by_category(user, user.selected_category)
     else:
         text = 'Ты не добавил категории!'
 
@@ -56,10 +65,12 @@ async def book_buttons_carousel(update: Update, _: ContextTypes.DEFAULT_TYPE):
     user = services.user.get_current_user(uid)
     categories = list(models.Category.select().where(
         models.category.Category.user == user))
+    user.selected_category = categories[current_category_index].id
+    user.save()
 
     await query.edit_message_text(
         text=services.get_books_by_category(
-            user, categories[current_category_index].id
+            user, user.selected_category
         ),
         reply_markup=get_book_keyboard(
             current_category_index,
